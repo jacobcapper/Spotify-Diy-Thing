@@ -139,20 +139,25 @@ public:
   }
 
   void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
-  {
-    // Clear the text area under the album art
-    int textStartY = 150 + 30;
-    tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
+{
+  // Clear the text area under the album art
+  int textStartY = 150 + 30 + tft.fontHeight();
+  tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
 
-    // Smooth-font text: set both fg and bg to ensure white-on-black (no white boxes)
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextDatum(MC_DATUM);
+  // Smooth-font text: white on black, centered datum (same as before)
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextDatum(MC_DATUM);
 
-    // Draw UTF-8 strings (Kana/Kanji will render via smooth font)
-    tft.drawString(currentlyPlaying.trackName,             screenCenterX, textStartY);
-    tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX, textStartY + 22);
-    tft.drawString(currentlyPlaying.albumName,             screenCenterX, textStartY + 44);
-  }
+  // Use the loaded font’s pixel height to set line spacing, with a small negative tweak
+  int lh    = tft.fontHeight();     // e.g. 17–22 depending on your .vlw
+  int step  = lh - 1;               // tighten spacing; try -3/-2/-1 by changing this offset
+  if (step < 10) step = 10;         // avoid getting too tight on tiny fonts
+
+  // Draw UTF-8 strings (Kana/Kanji will render via smooth font)
+  tft.drawString(currentlyPlaying.trackName,             screenCenterX, textStartY);
+  tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX, textStartY + step);
+  tft.drawString(currentlyPlaying.albumName,             screenCenterX, textStartY + step * 2);
+}
 
   void checkForInput()
   {
