@@ -99,7 +99,7 @@ public:
     // ---- Load UTF-8 capable smooth font (Kana + Kanji subset you generated) ----
     // Put NotoJP-18.vlw (or your chosen name) into /data and upload FS image.
     // loadFont expects the base name only (no leading '/' and no extension).
-    tft.loadFont("NotoJP-18");
+    tft.loadFont("NotoSansJP40012");
     tft.setTextDatum(MC_DATUM);
     // ---------------------------------------------------------------------------
 
