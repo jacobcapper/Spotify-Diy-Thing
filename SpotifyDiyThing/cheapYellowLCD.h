@@ -1,8 +1,10 @@
-#include "spotifyDisplay.h"
+#pragma once
 
+#include "spotifyDisplay.h"
 #include "touchScreen.h"
 
 #include <TFT_eSPI.h>
+
 // A library for checking if the reset button has been pressed twice
 // Can be used to enable config mode
 // Can be installed from the library manager (Search for "ESP_DoubleResetDetector")
@@ -17,8 +19,8 @@
 // -------------------------------
 // Putting this stuff outside the class because
 // I can't easily pass member functions in as callbacks for jpegdec
-
 // -------------------------------
+
 #include <FS.h>
 #include <SPIFFS.h>
 
@@ -71,7 +73,6 @@ class CheapYellowDisplay : public SpotifyDisplay
 public:
   void displaySetup(SpotifyArduino *spotifyObj)
   {
-
     spotify_display = spotifyObj;
 
     touchSetup(spotifyObj);
@@ -90,36 +91,40 @@ public:
 
     // Mount SPIFFS (format on first use if needed)
     if (!SPIFFS.begin(true)) {
-    Serial.println("SPIFFS mount failed");
+      Serial.println("SPIFFS mount failed");
+    } else {
+      Serial.println("SPIFFS mounted OK");
     }
 
-    // Load pre-existing UTF-8 capable smooth font (Kana included)
-    tft.loadFont("NotoJP-18");   // file Latin-Hiragana-24.vlw in /data/
+    // ---- Load UTF-8 capable smooth font (Kana + Kanji subset you generated) ----
+    // Put NotoJP-18.vlw (or your chosen name) into /data and upload FS image.
+    // loadFont expects the base name only (no leading '/' and no extension).
+    tft.loadFont("NotoJP-18");
     tft.setTextDatum(MC_DATUM);
+    // ---------------------------------------------------------------------------
+
+    // Optional: brief self-test at boot (comment out if not needed)
+    
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.fillScreen(TFT_BLACK);
+    tft.drawString("テスト かな カナ 漢字", tft.width()/2, tft.height()/2);
+    delay(1200);
+    tft.fillScreen(TFT_BLACK);
+    
 
   }
 
   void showDefaultScreen()
   {
     tft.fillScreen(TFT_BLACK);
-
     drawTouchButtons(false, false);
   }
 
   void displayTrackProgress(long progress, long duration)
   {
-
-    //  Serial.print("Elapsed time of song (ms): ");
-    //  Serial.print(progress);
-    //  Serial.print(" of ");
-    //  Serial.println(duration);
-    //  Serial.println();
-
     float percentage = ((float)progress / (float)duration) * 100;
     int clampedPercentage = (int)percentage;
-    // Serial.println(clampedPercentage);
     int barXWidth = map(clampedPercentage, 0, 100, 0, screenWidth - 40);
-    // Serial.println(barXWidth);
 
     int progressStartY = 150 + 5;
 
@@ -135,20 +140,18 @@ public:
 
   void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
   {
-    // Clear the text
+    // Clear the text area under the album art
     int textStartY = 150 + 30;
     tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-    // Optional: ensure centered datum
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);   // <--- add this
+    // Smooth-font text: set both fg and bg to ensure white-on-black (no white boxes)
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextDatum(MC_DATUM);
 
-    // Draw UTF-8 strings (Kana will render)
-    tft.drawString(currentlyPlaying.trackName,                screenCenterX, textStartY);
-    tft.drawString(currentlyPlaying.artists[0].artistName,    screenCenterX, textStartY + 22);
-    tft.drawString(currentlyPlaying.albumName,                screenCenterX, textStartY + 44);
-
+    // Draw UTF-8 strings (Kana/Kanji will render via smooth font)
+    tft.drawString(currentlyPlaying.trackName,             screenCenterX, textStartY);
+    tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX, textStartY + 22);
+    tft.drawString(currentlyPlaying.albumName,             screenCenterX, textStartY + 44);
   }
 
   void checkForInput()
@@ -264,7 +267,6 @@ private:
 
   int displayImageUsingFile(char *albumArtUrl)
   {
-
     // In this example I reuse the same filename
     // over and over, maybe saving the art using
     // the album URI as the name would be better
@@ -322,7 +324,6 @@ private:
 
   void drawTouchButtons(bool backStatus, bool forwardStatus)
   {
-
     int buttonCenterY = 75;
     int leftButtonCenterX = 40;
     int rightButtonCenterX = screenWidth - leftButtonCenterX;
