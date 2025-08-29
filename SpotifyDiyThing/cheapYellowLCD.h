@@ -19,6 +19,8 @@
 // I can't easily pass member functions in as callbacks for jpegdec
 
 // -------------------------------
+#include <FS.h>
+#include <SPIFFS.h>
 
 TFT_eSPI tft = TFT_eSPI();
 JPEGDEC jpeg;
@@ -85,6 +87,16 @@ public:
     tft.init();
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
+
+    // Mount SPIFFS (format on first use if needed)
+    if (!SPIFFS.begin(true)) {
+    Serial.println("SPIFFS mount failed");
+    }
+
+    // Load pre-existing UTF-8 capable smooth font (Kana included)
+    tft.loadFont("Latin-Hiragana-24");   // file Latin-Hiragana-24.vlw in /data/
+    tft.setTextDatum(MC_DATUM);
+
   }
 
   void showDefaultScreen()
@@ -126,10 +138,16 @@ public:
     // Clear the text
     int textStartY = 150 + 30;
     tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-    tft.drawCentreString(currentlyPlaying.trackName, screenCenterX, textStartY, 2);
-    tft.drawCentreString(currentlyPlaying.artists[0].artistName, screenCenterX, textStartY + 18, 2);
-    tft.drawCentreString(currentlyPlaying.albumName, screenCenterX, textStartY + 36, 2);
+    // Optional: ensure centered datum
+    tft.setTextDatum(MC_DATUM);
+
+    // Draw UTF-8 strings (Kana will render)
+    tft.drawString(currentlyPlaying.trackName,                screenCenterX, textStartY);
+    tft.drawString(currentlyPlaying.artists[0].artistName,    screenCenterX, textStartY + 22);
+    tft.drawString(currentlyPlaying.albumName,                screenCenterX, textStartY + 44);
+
   }
 
   void checkForInput()
