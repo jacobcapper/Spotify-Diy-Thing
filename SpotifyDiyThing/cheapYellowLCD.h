@@ -94,7 +94,7 @@ public:
     }
 
     // Load pre-existing UTF-8 capable smooth font (Kana included)
-    tft.loadFont("Latin-Hiragana-24");   // file Latin-Hiragana-24.vlw in /data/
+    tft.loadFont("NotoJP-18");   // file Latin-Hiragana-24.vlw in /data/
     tft.setTextDatum(MC_DATUM);
 
   }
@@ -141,6 +141,7 @@ public:
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
     // Optional: ensure centered datum
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);   // <--- add this
     tft.setTextDatum(MC_DATUM);
 
     // Draw UTF-8 strings (Kana will render)
