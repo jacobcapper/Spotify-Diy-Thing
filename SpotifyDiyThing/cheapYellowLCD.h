@@ -146,7 +146,7 @@ public:
 
   // Smooth-font text: white on black, centered datum (same as before)
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextDatum(MC_DATUM);
+  tft.setTextDatum(TL_DATUM);
 
   // Use the loaded font’s pixel height to set line spacing, with a small negative tweak
   int lh    = tft.fontHeight();     // e.g. 17–22 depending on your .vlw
@@ -154,9 +154,10 @@ public:
   if (step < 10) step = 10;         // avoid getting too tight on tiny fonts
 
   // Draw UTF-8 strings (Kana/Kanji will render via smooth font)
-  tft.drawString(currentlyPlaying.trackName,             screenCenterX, textStartY);
-  tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX, textStartY + step);
-  tft.drawString(currentlyPlaying.albumName,             screenCenterX, textStartY + step * 2);
+  tft.drawString(currentlyPlaying.trackName,             screenCenterX - (tft.textWidth(currentlyPlaying.trackName) / 2), textStartY);
+  tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX - (tft.textWidth(currentlyPlaying.artists[0].artistName) / 2), textStartY + step);
+  tft.drawString(currentlyPlaying.albumName,             screenCenterX - (tft.textWidth(currentlyPlaying.albumName) / 2), textStartY + step * 2);
+
 }
 
   void checkForInput()
