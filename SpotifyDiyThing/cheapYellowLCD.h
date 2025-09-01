@@ -139,38 +139,51 @@ public:
   }
 
   void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
-  {
-    // Base Y under album art; push a bit using current (body) font height
-    int textStartY = 150 + 30 + tft.fontHeight();
+{
+  // Base Y under album art; push a bit using current (body) font height
+  int textStartY = 150 + 30 + tft.fontHeight();
 
-    // Clear the text area under the album art
-    tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
+  // Clear the whole text area once (coarse clear)
+  tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
 
-    // We draw centered horizontally using TL_DATUM by subtracting half the text width
-    auto centerX = [&](const String& s) {
-      return screenCenterX - (tft.textWidth(s) / 2);
-    };
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextWrap(false);
 
-    // ---- TITLE (bigger font) ----
-    tft.loadFont(FONT_TITLE);
-    int lhTitle = tft.fontHeight();
-    String title = String(currentlyPlaying.trackName);
-    tft.drawString(title, centerX(title), textStartY);
+  auto centerX = [&](const String& s) {
+    return screenCenterX - (tft.textWidth(s) / 2);
+  };
 
-    // ---- ARTIST / ALBUM (smaller font) ----
-    tft.loadFont(FONT_BODY);
-    int lhBody = tft.fontHeight();
-    int step   = lhBody - 1;           // tighten a touch; adjust if you want
-    if (step < 10) step = 10;
+  // ---------- TITLE (big font) ----------
+  tft.loadFont(FONT_TITLE);
+  int lhTitle = tft.fontHeight();
 
-    String artist = String(currentlyPlaying.artists[0].artistName);
-    String album  = String(currentlyPlaying.albumName);
+  String title = String(currentlyPlaying.trackName);
 
-    int y = textStartY + lhTitle + 2;  // small gap under larger title
-    tft.drawString(artist, centerX(artist), y);
-    y += step;
-    tft.drawString(album,  centerX(album),  y);
-  }
+  // Clear the exact title line region to avoid “leftover” pixels from longer titles
+  tft.fillRect(0, textStartY, screenWidth, lhTitle, TFT_BLACK);
+  tft.drawString(title, centerX(title), textStartY);
+
+  // ---------- ARTIST + ALBUM (body font) ----------
+  tft.loadFont(FONT_BODY);
+  int lhBody = tft.fontHeight();
+  int step   = lhBody - 1;           // tighten slightly
+  if (step < 10) step = 10;
+
+  String artist = String(currentlyPlaying.artists[0].artistName);
+  String album  = String(currentlyPlaying.albumName);
+
+  int yArtist = textStartY + lhTitle + 2;
+  int yAlbum  = yArtist + step;
+
+  // Clear exact line rectangles for artist & album too
+  tft.fillRect(0, yArtist, screenWidth, lhBody, TFT_BLACK);
+  tft.fillRect(0, yAlbum,  screenWidth, lhBody, TFT_BLACK);
+
+  tft.drawString(artist, centerX(artist), yArtist);
+  tft.drawString(album,  centerX(album),  yAlbum);
+}
+
 
   void checkForInput()
   {
