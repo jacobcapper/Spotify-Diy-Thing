@@ -138,52 +138,43 @@ public:
     tft.fillRect(20 + barXWidth, progressStartY + 1, (screenWidth - 20) - (20 + barXWidth), 18, TFT_BLACK);
   }
 
-  void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
+void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
 {
-  // Base Y under album art; push a bit using current (body) font height
+  // Base Y under album art
   int textStartY = 150 + 30 + tft.fontHeight();
 
-  // Clear the whole text area once (coarse clear)
-  tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
+  // ---- Coarse clear with safety margins ----
+  int clearTop    = textStartY - 2;                        // wipe a bit above
+  if (clearTop < 0) clearTop = 0;
+  int clearHeight = (screenHeight - textStartY) + 4;       // wipe a bit below
+  if (clearTop + clearHeight > screenHeight) clearHeight = screenHeight - clearTop;
 
-  tft.setTextDatum(TL_DATUM);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.fillRect(0, clearTop, screenWidth, clearHeight, TFT_BLACK);
+
+  // ---- Common draw settings ----
   tft.setTextWrap(false);
-
-  auto centerX = [&](const String& s) {
-    return screenCenterX - (tft.textWidth(s) / 2);
-  };
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextDatum(TC_DATUM);                 // top-center datum
+  tft.setTextPadding(screenWidth);            // wipe full band width each draw
 
   // ---------- TITLE (big font) ----------
   tft.loadFont(FONT_TITLE);
   int lhTitle = tft.fontHeight();
-
   String title = String(currentlyPlaying.trackName);
-
-  // Clear the exact title line region to avoid “leftover” pixels from longer titles
-  tft.fillRect(0, textStartY, screenWidth, lhTitle, TFT_BLACK);
-  tft.drawString(title, centerX(title), textStartY);
+  tft.drawString(title, screenCenterX, textStartY);
 
   // ---------- ARTIST + ALBUM (body font) ----------
   tft.loadFont(FONT_BODY);
   int lhBody = tft.fontHeight();
-  int step   = lhBody - 1;           // tighten slightly
+  int step   = lhBody - 1;        // tighten line spacing slightly
   if (step < 10) step = 10;
-
-  String artist = String(currentlyPlaying.artists[0].artistName);
-  String album  = String(currentlyPlaying.albumName);
 
   int yArtist = textStartY + lhTitle + 2;
   int yAlbum  = yArtist + step;
 
-  // Clear exact line rectangles for artist & album too
-  tft.fillRect(0, yArtist, screenWidth, lhBody, TFT_BLACK);
-  tft.fillRect(0, yAlbum,  screenWidth, lhBody, TFT_BLACK);
-
-  tft.drawString(artist, centerX(artist), yArtist);
-  tft.drawString(album,  centerX(album),  yAlbum);
+  tft.drawString(String(currentlyPlaying.artists[0].artistName), screenCenterX, yArtist);
+  tft.drawString(String(currentlyPlaying.albumName),             screenCenterX, yAlbum);
 }
-
 
   void checkForInput()
   {
