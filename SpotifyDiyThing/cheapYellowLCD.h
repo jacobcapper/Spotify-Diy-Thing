@@ -29,6 +29,10 @@ JPEGDEC jpeg;
 
 const char *ALBUM_ART = "/album.jpg";
 
+// ---- Font names in SPIFFS ----
+static const char* FONT_BODY  = "NotoSansJP40012"; // smaller (artist / album)
+static const char* FONT_TITLE = "NotoSansJP40014"; // larger (track title)
+
 // This next function will be called during decoding of the jpeg file to
 // render each block to the Matrix.  If you use a different display
 // you will need to adapt this function to suit.
@@ -96,22 +100,18 @@ public:
       Serial.println("SPIFFS mounted OK");
     }
 
-    // ---- Load UTF-8 capable smooth font (Kana + Kanji subset you generated) ----
-    // Put NotoJP-18.vlw (or your chosen name) into /data and upload FS image.
-    // loadFont expects the base name only (no leading '/' and no extension).
-    tft.loadFont("NotoSansJP40012");
-    tft.setTextDatum(MC_DATUM);
-    // ---------------------------------------------------------------------------
-
-    // Optional: brief self-test at boot (comment out if not needed)
-    
+    // ---- Load default (body) smooth font, set TL datum globally ----
+    tft.loadFont(FONT_BODY);
+    tft.setTextDatum(TL_DATUM);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    // Optional: brief self-test at boot (centered once)
+    tft.setTextDatum(MC_DATUM);
     tft.fillScreen(TFT_BLACK);
     tft.drawString("テスト かな カナ 漢字", tft.width()/2, tft.height()/2);
     delay(1200);
     tft.fillScreen(TFT_BLACK);
-    
-
+    tft.setTextDatum(TL_DATUM); // back to TL_DATUM
   }
 
   void showDefaultScreen()
@@ -139,26 +139,38 @@ public:
   }
 
   void printCurrentlyPlayingToScreen(CurrentlyPlaying currentlyPlaying)
-{
-  // Clear the text area under the album art
-  int textStartY = 150 + 30 + tft.fontHeight();
-  tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
+  {
+    // Base Y under album art; push a bit using current (body) font height
+    int textStartY = 150 + 30 + tft.fontHeight();
 
-  // Smooth-font text: white on black, centered datum (same as before)
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextDatum(TL_DATUM);
+    // Clear the text area under the album art
+    tft.fillRect(0, textStartY, screenWidth, screenHeight - textStartY, TFT_BLACK);
 
-  // Use the loaded font’s pixel height to set line spacing, with a small negative tweak
-  int lh    = tft.fontHeight();     // e.g. 17–22 depending on your .vlw
-  int step  = lh - 1;               // tighten spacing; try -3/-2/-1 by changing this offset
-  if (step < 10) step = 10;         // avoid getting too tight on tiny fonts
+    // We draw centered horizontally using TL_DATUM by subtracting half the text width
+    auto centerX = [&](const String& s) {
+      return screenCenterX - (tft.textWidth(s) / 2);
+    };
 
-  // Draw UTF-8 strings (Kana/Kanji will render via smooth font)
-  tft.drawString(currentlyPlaying.trackName,             screenCenterX - (tft.textWidth(currentlyPlaying.trackName) / 2), textStartY);
-  tft.drawString(currentlyPlaying.artists[0].artistName, screenCenterX - (tft.textWidth(currentlyPlaying.artists[0].artistName) / 2), textStartY + step);
-  tft.drawString(currentlyPlaying.albumName,             screenCenterX - (tft.textWidth(currentlyPlaying.albumName) / 2), textStartY + step * 2);
+    // ---- TITLE (bigger font) ----
+    tft.loadFont(FONT_TITLE);
+    int lhTitle = tft.fontHeight();
+    String title = String(currentlyPlaying.trackName);
+    tft.drawString(title, centerX(title), textStartY);
 
-}
+    // ---- ARTIST / ALBUM (smaller font) ----
+    tft.loadFont(FONT_BODY);
+    int lhBody = tft.fontHeight();
+    int step   = lhBody - 1;           // tighten a touch; adjust if you want
+    if (step < 10) step = 10;
+
+    String artist = String(currentlyPlaying.artists[0].artistName);
+    String album  = String(currentlyPlaying.albumName);
+
+    int y = textStartY + lhTitle + 2;  // small gap under larger title
+    tft.drawString(artist, centerX(artist), y);
+    y += step;
+    tft.drawString(album,  centerX(album),  y);
+  }
 
   void checkForInput()
   {
